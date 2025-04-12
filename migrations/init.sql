@@ -18,7 +18,6 @@ CREATE TABLE receptions (
     status TEXT NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'close'))
 );
 
-
 CREATE TABLE products (
     id UUID PRIMARY KEY,
     date_time TIMESTAMPTZ NOT NULL DEFAULT now(),

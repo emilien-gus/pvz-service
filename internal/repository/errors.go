@@ -7,4 +7,5 @@ var (
 	ErrActiveReceptionExists = errors.New("active reception already exists")
 	ErrPVZNotFound           = errors.New("pvz not found")
 	ErrReceptionConflict     = errors.New("reception conflict")
+	ErrNoActiveReception     = errors.New("no active reception")
 )

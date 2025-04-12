@@ -31,12 +31,13 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 	}
 	defer tx.Rollback()
 
-	checkQuery, checkArgs, err := sq.Select("Count(*)").
+	checkQuery, checkArgs, err := sq.Select("*").
 		From("reception").
 		Where(sq.And{
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
 		}).
+		Limit(1).
 		ToSql()
 
 	if err != nil {
@@ -53,9 +54,10 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 		return nil, ErrActiveReceptionExists
 	}
 
+	id := uuid.New()
 	insertQuery, insertArgs, err := sq.Insert("reception").
-		Columns("pvz_id").
-		Values(pvzID).
+		Columns("id, pvz_id").
+		Values(id, pvzID).
 		Suffix("RETURNING id, date_time, pvz_id, status").
 		ToSql()
 
@@ -73,7 +75,7 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 
 	if err != nil {
 		//foreign_key_violation
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23503" {
 			return nil, ErrPVZNotFound
 		}
 		return nil, fmt.Errorf("database error: %w", err)

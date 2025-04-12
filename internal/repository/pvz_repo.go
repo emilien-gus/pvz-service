@@ -7,6 +7,7 @@ import (
 	"pvz/internal/models"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 )
 
 type PVZRepositoryInterface interface {
@@ -22,7 +23,8 @@ func NewPWZRepository(db *sql.DB) *PVZRepository {
 }
 
 func (p *PVZRepository) InsertPVZ(ctx context.Context, city string) (*models.PVZ, error) {
-	query, args, err := sq.Insert("pvz").Columns("city").Values(city).Suffix("RETURNING id, registration_date, city").ToSql()
+	id := uuid.New()
+	query, args, err := sq.Insert("pvz").Columns("id, city").Values(id, city).Suffix("RETURNING id, registration_date, city").ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
