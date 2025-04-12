@@ -24,7 +24,7 @@ func NewPVZService(pvzRepo repository.PVZRepositoryInterface) *PVZService {
 func (s *PVZService) CreatePVZ(ctx context.Context, city, role string) (models.PVZ, error) {
 	pvz := &models.PVZ{}
 	if role != "moderator" {
-		return *pvz, errors.New("access denied")
+		return *pvz, ErrAccessDenied
 	}
 
 	if _, ok := allowedCities[city]; !ok {

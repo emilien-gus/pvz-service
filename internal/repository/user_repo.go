@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"pvz/internal/models"
 
@@ -43,7 +42,7 @@ func (ur *UserRepository) InsertUser(ctx context.Context, email, password, role 
 	if err != nil {
 		// check for 23505 error (unique_violation) in PostgreSQL
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return nil, errors.New("user already exists")
+			return nil, ErrUserExists
 		}
 		return nil, fmt.Errorf("database error: %w", err)
 	}

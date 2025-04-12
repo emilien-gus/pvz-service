@@ -33,14 +33,15 @@ func (h *PVZHandler) CreatePVZ(c *gin.Context) {
 
 	pvz, err := h.pvzService.CreatePVZ(c.Request.Context(), req.City, role)
 	if err != nil {
-		if errors.Is(err, errors.New("acces denied")) {
+		if errors.Is(err, services.ErrAccessDenied) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
-		} else if errors.Is(err, errors.New("not allowed city")) {
+		} else if errors.Is(err, services.ErrCityNotAllowed) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 	}
 
