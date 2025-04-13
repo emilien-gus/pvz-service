@@ -67,7 +67,7 @@ func (r *ProductRepository) InsertProduct(ctx context.Context, productType strin
 	var product models.Product
 	err = tx.QueryRowContext(ctx, insertQuery, insertArgs...).Scan(
 		&product.ID,
-		&product.DatedTime,
+		&product.DateTime,
 		&product.ProductType,
 		&product.ReceptionID,
 	)

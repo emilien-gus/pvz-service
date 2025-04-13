@@ -5,6 +5,7 @@ import (
 	"errors"
 	"pvz/internal/models"
 	"pvz/internal/repository"
+	"time"
 )
 
 var allowedCities = map[string]bool{
@@ -37,4 +38,24 @@ func (s *PVZService) CreatePVZ(ctx context.Context, city, role string) (models.P
 	}
 
 	return *pvz, err
+}
+
+func (s *PVZService) GetPVZList(ctx context.Context, startDate, endDate *time.Time, page, limit int, role string) ([]models.PVZWithReceptions, error) {
+	if role != "employee" {
+		return nil, ErrAccessDenied
+	}
+
+	if page < 1 {
+		return nil, ErrPageParamIsInvalid
+	}
+
+	if limit <= 0 || limit > 30 {
+		return nil, ErrLimitParamIsInvalid
+	}
+
+	if startDate != nil && endDate != nil && startDate.After(*endDate) {
+		return nil, ErrStartLaterThenEnd
+	}
+
+	return s.pvzRepo.GetPVZList(ctx, startDate, endDate, page, limit)
 }
