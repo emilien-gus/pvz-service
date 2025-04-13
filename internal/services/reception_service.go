@@ -29,3 +29,17 @@ func (s *ReceptionService) CreateReception(ctx context.Context, pvzID uuid.UUID,
 
 	return *reception, nil
 }
+
+func (s *ReceptionService) CloseReception(ctx context.Context, pvzID uuid.UUID, role string) (models.Reception, error) {
+	reception := &models.Reception{}
+	if role != "employee" {
+		return *reception, ErrAccessDenied
+	}
+
+	reception, err := s.receptionRepo.UpdateLastReceptionStatus(ctx, pvzID)
+	if err != nil {
+		return *reception, err
+	}
+
+	return *reception, nil
+}

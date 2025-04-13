@@ -39,3 +39,16 @@ func (s *ProductService) AddProduct(ctx context.Context, productType string, pvz
 
 	return *product, err
 }
+
+func (s *ProductService) DeleteProduct(ctx context.Context, pvzID uuid.UUID, role string) error {
+	if role != "employee" {
+		return ErrAccessDenied
+	}
+
+	err := s.productRepo.DeleteLastProduct(ctx, pvzID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

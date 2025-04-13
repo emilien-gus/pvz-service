@@ -57,3 +57,34 @@ func (h *ProductHandler) Add(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, product)
 }
+
+func (h *ProductHandler) Delete(c *gin.Context) {
+	pvzIdRaw := c.Param("pvzId")
+
+	pvzId, err := uuid.Parse(pvzIdRaw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format: " + err.Error()})
+		return
+	}
+
+	role, err := getUserRole(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.productService.DeleteProduct(c.Request.Context(), pvzId, role)
+	if err != nil {
+		if errors.Is(err, services.ErrAccessDenied) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		} else if errors.Is(err, repository.ErrPVZNotFound) {
+			c.JSON(http.StatusBadRequest, err.Error())
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message:": "product deleted successfully"})
+}

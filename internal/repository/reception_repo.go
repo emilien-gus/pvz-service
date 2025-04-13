@@ -14,6 +14,7 @@ import (
 
 type ReceptionRepositoryInterface interface {
 	InsertReception(ctx context.Context, pvzID uuid.UUID) (*models.Reception, error)
+	UpdateLastReceptionStatus(ctx context.Context, pvzID uuid.UUID) (*models.Reception, error)
 }
 
 type ReceptionRepository struct {
@@ -36,8 +37,7 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 		Where(sq.And{
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
-		}).
-		Limit(1).
+		}).Limit(1).
 		ToSql()
 
 	if err != nil {
@@ -83,6 +83,39 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return &reception, nil
+}
+
+func (r *ReceptionRepository) UpdateLastReceptionStatus(ctx context.Context, pvzID uuid.UUID) (*models.Reception, error) {
+	query, args, err := sq.
+		Update("receptions").
+		Set("status", models.ReceptionStatusClosed).
+		Where(sq.And{
+			sq.Eq{"pvz_id": pvzID},
+			sq.Eq{"status": models.ReceptionStatusInProgress},
+		}).
+		OrderBy("date_time DESC").
+		Limit(1).
+		Suffix("RETURNING id, date_time, pvz_id, status").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build update query: %w", err)
+	}
+
+	var reception models.Reception
+	err = r.db.QueryRowContext(ctx, query, args...).Scan(
+		&reception.ID,
+		&reception.DateTime,
+		&reception.PVZID,
+		&reception.Status,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNoActiveReception
+		}
+		return nil, fmt.Errorf("execute update: %w", err)
 	}
 
 	return &reception, nil

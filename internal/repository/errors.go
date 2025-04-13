@@ -8,4 +8,5 @@ var (
 	ErrPVZNotFound           = errors.New("pvz not found")
 	ErrReceptionConflict     = errors.New("reception conflict")
 	ErrNoActiveReception     = errors.New("no active reception")
+	ErrEmptyReception        = errors.New("no products in reception")
 )

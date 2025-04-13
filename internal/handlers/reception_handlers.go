@@ -46,8 +46,40 @@ func (h *ReceptionHandler) Create(c *gin.Context) {
 		if errors.Is(err, services.ErrAccessDenied) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
-		} else if errors.Is(err, repository.ErrPVZNotFound) || errors.Is(err, repository.ErrActiveReceptionExists) {
+		} else if errors.Is(err, repository.ErrNoActiveReception) || errors.Is(err, repository.ErrEmptyReception) {
 			c.JSON(http.StatusBadRequest, err.Error())
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusCreated, reception)
+}
+
+func (h *ReceptionHandler) Close(c *gin.Context) {
+	pvzIdRaw := c.Param("pvzId")
+
+	pvzId, err := uuid.Parse(pvzIdRaw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format: " + err.Error()})
+		return
+	}
+
+	role, err := getUserRole(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	reception, err := h.receptionService.CloseReception(c.Request.Context(), pvzId, role)
+
+	if err != nil {
+		if errors.Is(err, services.ErrAccessDenied) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		} else if errors.Is(err, repository.ErrNoActiveReception) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
