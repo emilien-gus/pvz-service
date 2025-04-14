@@ -9,4 +9,5 @@ var (
 	ErrStartLaterThenEnd     = errors.New("start date_time is later then end date_time")
 	ErrPageParamIsInvalid    = errors.New("page parametr is invalid")
 	ErrLimitParamIsInvalid   = errors.New("limit parametr is invalid")
+	ErrInvalidRole           = errors.New("role is invalid")
 )

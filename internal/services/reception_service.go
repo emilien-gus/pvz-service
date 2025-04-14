@@ -12,7 +12,7 @@ type ReceptionService struct {
 	receptionRepo repository.ReceptionRepositoryInterface
 }
 
-func NEwReceptionService(receptionRepo repository.ReceptionRepositoryInterface) *ReceptionService {
+func NewReceptionService(receptionRepo repository.ReceptionRepositoryInterface) *ReceptionService {
 	return &ReceptionService{receptionRepo: receptionRepo}
 }
 

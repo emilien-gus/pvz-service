@@ -19,6 +19,11 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
+var allowedRoles = map[string]bool{
+	"moderator": true,
+	"employee":  true,
+}
+
 type UserService struct {
 	userRepo repository.UserRepositoryInterface
 }
@@ -61,6 +66,10 @@ func (u *UserService) LoginUser(ctx context.Context, email, password string) (st
 }
 
 func DummyLogin(role string) (string, error) {
+	if _, ok := allowedRoles[role]; !ok {
+		return "", ErrInvalidRole
+	}
+
 	user := models.User{
 		ID:   uuid.New(),
 		Role: role,
@@ -73,8 +82,12 @@ func DummyLogin(role string) (string, error) {
 	return token, nil
 }
 
-// generate JWT token for user
 func generateJWT(user *models.User) (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "", fmt.Errorf("JWT_SECRET not set")
+	}
+
 	claims := CustomClaims{
 		UserID: user.ID,
 		Role:   user.Role,
