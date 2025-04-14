@@ -31,7 +31,7 @@ func TestPVZService_CreatePVZ(t *testing.T) {
 	pvzService := NewPVZService(mockRepo)
 
 	t.Run("successful PVZ creation", func(t *testing.T) {
-		mockRepo.On("InsertPVZ", mock.Anything, "Москва").Return(&models.PVZ{ID: uuid.New(), Registration: time.Now(), City: "Москва"}, nil)
+		mockRepo.On("InsertPVZ", mock.Anything, "Москва").Return(&models.PVZ{ID: uuid.New(), RegistrationDate: time.Now(), City: "Москва"}, nil)
 
 		pvz, err := pvzService.CreatePVZ(context.Background(), "Москва", "moderator")
 

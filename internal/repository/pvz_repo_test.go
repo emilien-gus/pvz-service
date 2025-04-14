@@ -36,7 +36,7 @@ func TestPVZRepository_InsertPVZ_Success(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, city, result.City)
 	assert.Equal(t, id, result.ID)
-	assert.WithinDuration(t, registration, result.Registration, time.Second)
+	assert.WithinDuration(t, registration, result.RegistrationDate, time.Second)
 }
 
 func TestPVZRepository_InsertPVZ_DBError(t *testing.T) {

@@ -32,7 +32,7 @@ func (p *PVZRepository) InsertPVZ(ctx context.Context, city string) (*models.PVZ
 	}
 
 	var pvz models.PVZ
-	err = p.db.QueryRowContext(ctx, query, args...).Scan(&pvz.ID, &pvz.Registration, &pvz.City)
+	err = p.db.QueryRowContext(ctx, query, args...).Scan(&pvz.ID, &pvz.RegistrationDate, &pvz.City)
 	if err != nil {
 		return nil, fmt.Errorf("database error: %w", err)
 	}

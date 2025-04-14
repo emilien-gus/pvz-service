@@ -11,10 +11,10 @@ import (
 )
 
 type ProductHandler struct {
-	productService *services.ProductService
+	productService services.ProductServiceInterface
 }
 
-func NewProductService(productService *services.ProductService) *ProductHandler {
+func NewProductHandler(productService services.ProductServiceInterface) *ProductHandler {
 	return &ProductHandler{productService: productService}
 }
 
@@ -75,15 +75,14 @@ func (h *ProductHandler) Delete(c *gin.Context) {
 
 	err = h.productService.DeleteProduct(c.Request.Context(), pvzId, role)
 	if err != nil {
-		if errors.Is(err, services.ErrAccessDenied) {
+		if err == services.ErrAccessDenied {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		} else if errors.Is(err, repository.ErrPVZNotFound) {
+		} else if err == repository.ErrPVZNotFound {
 			c.JSON(http.StatusBadRequest, err.Error())
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
 		}
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message:": "product deleted successfully"})

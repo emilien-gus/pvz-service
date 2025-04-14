@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 	"pvz/internal/services"
 
@@ -9,10 +8,10 @@ import (
 )
 
 type UserHandler struct {
-	userService *services.UserService
+	userService services.UserServiceInterface
 }
 
-func NewUserHandler(userService *services.UserService) *UserHandler {
+func NewUserHandler(userService services.UserServiceInterface) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
@@ -30,10 +29,10 @@ func (u *UserHandler) Register(c *gin.Context) {
 
 	user, err := u.userService.RegisterUser(c.Request.Context(), req.Email, req.Password, req.Role)
 	if err != nil {
-		if errors.Is(err, errors.New("user already exists")) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if err == ErrUserExists {
+			c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error: ": err.Error()})
 		}
 		return
 	}
@@ -54,7 +53,7 @@ func (u *UserHandler) Login(c *gin.Context) {
 
 	token, err := u.userService.LoginUser(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		if errors.Is(err, errors.New("wrong password")) || errors.Is(err, errors.New("no such user")) {
+		if err == ErrWrongPassword || err == ErrUserDoesntExist {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -14,6 +14,11 @@ var allowedProductTypes = map[string]bool{
 	"обувь":       true,
 }
 
+type ProductServiceInterface interface {
+	AddProduct(ctx context.Context, productType string, pvzID uuid.UUID, role string) (models.Product, error)
+	DeleteProduct(ctx context.Context, pvzID uuid.UUID, role string) error
+}
+
 type ProductService struct {
 	productRepo repository.ProductRepositoryInterface
 }

@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type ReceptionServiceInterface interface {
+	CreateReception(ctx context.Context, pvzID uuid.UUID, role string) (models.Reception, error)
+	CloseReception(ctx context.Context, pvzID uuid.UUID, role string) (models.Reception, error)
+}
+
 type ReceptionService struct {
 	receptionRepo repository.ReceptionRepositoryInterface
 }

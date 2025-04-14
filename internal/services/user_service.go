@@ -24,6 +24,11 @@ var allowedRoles = map[string]bool{
 	"employee":  true,
 }
 
+type UserServiceInterface interface {
+	RegisterUser(ctx context.Context, email, password, role string) (models.User, error)
+	LoginUser(ctx context.Context, email, password string) (string, error)
+}
+
 type UserService struct {
 	userRepo repository.UserRepositoryInterface
 }

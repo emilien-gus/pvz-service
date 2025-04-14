@@ -14,6 +14,11 @@ var allowedCities = map[string]bool{
 	"Казань":          true,
 }
 
+type PVZServiceInterface interface {
+	CreatePVZ(ctx context.Context, city, role string) (models.PVZ, error)
+	GetPVZList(ctx context.Context, startDate, endDate *time.Time, page, limit int, role string) ([]models.PVZWithReceptions, error)
+}
+
 type PVZService struct {
 	pvzRepo repository.PVZRepositoryInterface
 }

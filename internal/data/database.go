@@ -16,9 +16,10 @@ var DB *sql.DB
 func InitDB() error {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
-		return err
 	}
+
 	psqlInfo := getDBConnectionString()
+	log.Printf("Connecting to DB with: %s", psqlInfo) // Логирование строки подключения
 
 	var err error
 	DB, err = sql.Open("postgres", psqlInfo)
@@ -26,28 +27,26 @@ func InitDB() error {
 		return fmt.Errorf("Database connection error: %v", err)
 	}
 
-	err = DB.Ping() // making sure db works and responds
+	// Проверка подключения
+	err = DB.Ping()
 	if err != nil {
 		return fmt.Errorf("Failed to connect database: %v", err)
+	}
+
+	log.Println("Successfully connected to database")
+	return nil
+}
+
+func CloseDB() error {
+	if DB != nil {
+		return DB.Close()
 	}
 	return nil
 }
 
-// Closing database
-func CloseDB() error {
-	if DB != nil {
-		err := DB.Close()
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-	return fmt.Errorf("DB is nil at closing")
-}
-
 func getDBConnectionString() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 	"pvz/internal/repository"
 	"pvz/internal/services"
@@ -11,10 +10,10 @@ import (
 )
 
 type ReceptionHandler struct {
-	receptionService *services.ReceptionService
+	receptionService services.ReceptionServiceInterface
 }
 
-func NewReceptionHandler(receptionService *services.ReceptionService) *ReceptionHandler {
+func NewReceptionHandler(receptionService services.ReceptionServiceInterface) *ReceptionHandler {
 	return &ReceptionHandler{receptionService: receptionService}
 }
 
@@ -43,15 +42,14 @@ func (h *ReceptionHandler) Create(c *gin.Context) {
 	reception, err := h.receptionService.CreateReception(c.Request.Context(), id, role)
 
 	if err != nil {
-		if errors.Is(err, services.ErrAccessDenied) {
+		if err == services.ErrAccessDenied {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		} else if errors.Is(err, repository.ErrNoActiveReception) || errors.Is(err, repository.ErrEmptyReception) {
+		} else if err == repository.ErrActiveReceptionExists || err == repository.ErrPVZNotFound {
 			c.JSON(http.StatusBadRequest, err.Error())
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
 		}
+		return
 	}
 
 	c.JSON(http.StatusCreated, reception)
@@ -75,16 +73,15 @@ func (h *ReceptionHandler) Close(c *gin.Context) {
 	reception, err := h.receptionService.CloseReception(c.Request.Context(), pvzId, role)
 
 	if err != nil {
-		if errors.Is(err, services.ErrAccessDenied) {
+		if err == services.ErrAccessDenied {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		} else if errors.Is(err, repository.ErrNoActiveReception) {
+		} else if err == repository.ErrNoActiveReception {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
 		}
+		return
 	}
 
-	c.JSON(http.StatusCreated, reception)
+	c.JSON(http.StatusOK, reception)
 }
