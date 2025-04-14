@@ -61,7 +61,7 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 	}
 
 	var user models.User
-	err = ur.db.QueryRowContext(ctx, query, args).Scan(&user)
+	err = ur.db.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

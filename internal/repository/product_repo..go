@@ -112,22 +112,20 @@ func (r *ProductRepository) DeleteLastProduct(ctx context.Context, pvzID uuid.UU
 		return fmt.Errorf("get active reception: %w", err)
 	}
 
-	// deletin of product
-	deleteProductQuery, deleteProductArgs, err := sq.
-		Delete("products").
-		Where(sq.Eq{
-			"id": sq.Select("id").
-				From("products").
-				Where(sq.Eq{"reception_id": receptionID}).
-				OrderBy("created_at DESC").
-				Limit(1),
-		}).
+	subQuery, subArgs, err := sq.
+		Select("id").
+		From("products").
+		Where(sq.Eq{"reception_id": receptionID}).
+		OrderBy("created_at DESC").
+		Limit(1).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("build delete query: %w", err)
+		return fmt.Errorf("build subquery: %w", err)
 	}
 
-	result, err := tx.ExecContext(ctx, deleteProductQuery, deleteProductArgs...)
+	deleteSQL := fmt.Sprintf("DELETE FROM products WHERE id = (%s)", subQuery)
+
+	result, err := tx.ExecContext(ctx, deleteSQL, subArgs...)
 	if err != nil {
 		return fmt.Errorf("delete product: %w", err)
 	}

@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"pvz/internal/models"
 
@@ -32,8 +31,8 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 	}
 	defer tx.Rollback()
 
-	checkQuery, checkArgs, err := sq.Select("*").
-		From("reception").
+	checkQuery, checkArgs, err := sq.Select("1").
+		From("receptions").
 		Where(sq.And{
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
@@ -44,18 +43,22 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 		return nil, fmt.Errorf("failed to build check query: %w", err)
 	}
 
-	var InProgressCount int
-	err = tx.QueryRowContext(ctx, checkQuery, checkArgs...).Scan(&InProgressCount)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("failed to check active reception: %w", err)
+	var exists bool
+	err = tx.QueryRowContext(ctx, checkQuery, checkArgs...).Scan(&exists)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			exists = false // no in_progress rows
+		} else {
+			return nil, fmt.Errorf("failed to check active reception: %w", err)
+		}
 	}
 
-	if InProgressCount > 0 {
+	if exists {
 		return nil, ErrActiveReceptionExists
 	}
 
 	id := uuid.New()
-	insertQuery, insertArgs, err := sq.Insert("reception").
+	insertQuery, insertArgs, err := sq.Insert("receptions").
 		Columns("id, pvz_id").
 		Values(id, pvzID).
 		Suffix("RETURNING id, date_time, pvz_id, status").
