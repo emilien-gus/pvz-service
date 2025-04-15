@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"pvz/internal/models"
 	"time"
 
@@ -124,7 +123,6 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 
 		if receptionID.Valid {
 			receptionUUID, err := uuid.Parse(receptionID.String)
-			log.Println("Reception:", receptionUUID)
 
 			if err != nil {
 				return nil, fmt.Errorf("error while parsing pvz data reception uuid: %w", err)
@@ -136,6 +134,7 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 					break
 				}
 			}
+
 			if existingReception == nil {
 				newReception := models.ReceptionWithProducts{
 					Reception: models.Reception{
@@ -152,7 +151,6 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 
 			if productID.Valid {
 				productUUID, err := uuid.Parse(productID.String)
-				log.Println("Product:", productUUID)
 				if err != nil {
 					return nil, fmt.Errorf("error while parsing pvz data product uuid: %w", err)
 				}
@@ -179,6 +177,5 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 		result[i] = *rawResult[i]
 	}
 
-	log.Println(rawResult)
 	return result, nil
 }

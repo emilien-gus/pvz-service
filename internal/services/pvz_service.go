@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"log"
 	"pvz/internal/models"
 	"pvz/internal/repository"
 	"time"
@@ -63,6 +62,5 @@ func (s *PVZService) GetPVZList(ctx context.Context, startDate, endDate *time.Ti
 	}
 
 	arr, err := s.pvzRepo.GetPVZList(ctx, startDate, endDate, page, limit)
-	log.Println(arr, err)
 	return arr, err
 }
