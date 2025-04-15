@@ -92,7 +92,7 @@ func (h *PVZHandler) GetPVZInfo(c *gin.Context) {
 		return
 	}
 
-	pvzs, err := h.pvzService.GetPVZList(c, startDate, endDate, page, limit, role)
+	pvzs, err := h.pvzService.GetPVZList(c.Request.Context(), startDate, endDate, page, limit, role)
 	if err != nil {
 		switch err {
 		case services.ErrAccessDenied:

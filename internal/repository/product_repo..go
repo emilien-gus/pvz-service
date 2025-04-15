@@ -32,12 +32,13 @@ func (r *ProductRepository) InsertProduct(ctx context.Context, productType strin
 	defer tx.Rollback()
 
 	checkQuery, checkArgs, err := sq.Select("id").
-		From("reception").
+		From("receptions").
 		Where(sq.And{
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
 		}).
 		Limit(1).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	if err != nil {
@@ -55,9 +56,10 @@ func (r *ProductRepository) InsertProduct(ctx context.Context, productType strin
 
 	id := uuid.New()
 	insertQuery, insertArgs, err := sq.Insert("products").
-		Columns("id, reception_id").
-		Values(id, receptionID).
+		Columns("id, type, reception_id").
+		Values(id, productType, receptionID).
 		Suffix("RETURNING id, date_time, type, reception_id").
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	if err != nil {
@@ -98,6 +100,7 @@ func (r *ProductRepository) DeleteLastProduct(ctx context.Context, pvzID uuid.UU
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
 		}).Limit(1).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return fmt.Errorf("build check reception query: %w", err)
@@ -116,8 +119,9 @@ func (r *ProductRepository) DeleteLastProduct(ctx context.Context, pvzID uuid.UU
 		Select("id").
 		From("products").
 		Where(sq.Eq{"reception_id": receptionID}).
-		OrderBy("created_at DESC").
+		OrderBy("date_time DESC").
 		Limit(1).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
 		return fmt.Errorf("build subquery: %w", err)

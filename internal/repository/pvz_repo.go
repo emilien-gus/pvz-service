@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"pvz/internal/models"
 	"time"
 
@@ -26,7 +27,7 @@ func NewPWZRepository(db *sql.DB) *PVZRepository {
 
 func (p *PVZRepository) InsertPVZ(ctx context.Context, city string) (*models.PVZ, error) {
 	id := uuid.New()
-	query, args, err := sq.Insert("pvz").Columns("id, city").Values(id, city).Suffix("RETURNING id, registration_date, city").ToSql()
+	query, args, err := sq.Insert("pvz").Columns("id, city").Values(id, city).Suffix("RETURNING id, registration_date, city").PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
@@ -67,7 +68,7 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 		query = query.Where(sq.LtOrEq{"r.date_time": *endDate})
 	}
 
-	sqlQuery, args, err := query.ToSql()
+	sqlQuery, args, err := query.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
@@ -78,7 +79,7 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 	}
 	defer rows.Close()
 
-	var result []models.PVZWithReceptions
+	var rawResult []*models.PVZWithReceptions
 	pvzMap := make(map[uuid.UUID]*models.PVZWithReceptions)
 
 	for rows.Next() {
@@ -118,11 +119,16 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 				Receptions:       []models.ReceptionWithProducts{},
 			}
 			pvzMap[pvzID] = pvzResp
-			result = append(result, *pvzResp)
+			rawResult = append(rawResult, pvzResp)
 		}
 
 		if receptionID.Valid {
-			receptionUUID, _ := uuid.Parse(receptionID.String)
+			receptionUUID, err := uuid.Parse(receptionID.String)
+			log.Println("Reception:", receptionUUID)
+
+			if err != nil {
+				return nil, fmt.Errorf("error while parsing pvz data reception uuid: %w", err)
+			}
 			var existingReception *models.ReceptionWithProducts
 			for i := range pvzResp.Receptions {
 				if pvzResp.Receptions[i].Reception.ID == receptionUUID {
@@ -130,7 +136,6 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 					break
 				}
 			}
-
 			if existingReception == nil {
 				newReception := models.ReceptionWithProducts{
 					Reception: models.Reception{
@@ -142,24 +147,38 @@ func (p *PVZRepository) GetPVZList(ctx context.Context, startDate, endDate *time
 					Products: []models.Product{},
 				}
 				pvzResp.Receptions = append(pvzResp.Receptions, newReception)
-				existingReception = &pvzResp.Receptions[len(pvzResp.Receptions)-1]
+				existingReception = &newReception
 			}
 
 			if productID.Valid {
-				productUUID, _ := uuid.Parse(productID.String)
+				productUUID, err := uuid.Parse(productID.String)
+				log.Println("Product:", productUUID)
+				if err != nil {
+					return nil, fmt.Errorf("error while parsing pvz data product uuid: %w", err)
+				}
 				product := models.Product{
 					ID:          productUUID,
 					DateTime:    productDateTime.Time,
 					ProductType: productType.String,
+					ReceptionID: receptionUUID,
 				}
 				existingReception.Products = append(existingReception.Products, product)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("error after row iteration: %w", err)
+		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error during row iteration: %w", err)
+		return nil, fmt.Errorf("error after row iteration: %w", err)
 	}
 
+	result := make([]models.PVZWithReceptions, len(rawResult))
+	for i := range rawResult {
+		result[i] = *rawResult[i]
+	}
+
+	log.Println(rawResult)
 	return result, nil
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"pvz/internal/models"
 	"pvz/internal/repository"
 	"time"
@@ -28,18 +29,17 @@ func NewPVZService(pvzRepo repository.PVZRepositoryInterface) *PVZService {
 }
 
 func (s *PVZService) CreatePVZ(ctx context.Context, city, role string) (models.PVZ, error) {
-	pvz := &models.PVZ{}
 	if role != "moderator" {
-		return *pvz, ErrAccessDenied
+		return models.PVZ{}, ErrAccessDenied
 	}
 
 	if _, ok := allowedCities[city]; !ok {
-		return *pvz, errors.New("not allowed city")
+		return models.PVZ{}, errors.New("not allowed city")
 	}
 
 	pvz, err := s.pvzRepo.InsertPVZ(ctx, city)
 	if err != nil {
-		return *pvz, err
+		return models.PVZ{}, err
 	}
 
 	return *pvz, err
@@ -62,5 +62,7 @@ func (s *PVZService) GetPVZList(ctx context.Context, startDate, endDate *time.Ti
 		return nil, ErrStartLaterThenEnd
 	}
 
-	return s.pvzRepo.GetPVZList(ctx, startDate, endDate, page, limit)
+	arr, err := s.pvzRepo.GetPVZList(ctx, startDate, endDate, page, limit)
+	log.Println(arr, err)
+	return arr, err
 }

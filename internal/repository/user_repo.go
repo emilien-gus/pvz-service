@@ -33,7 +33,7 @@ func (ur *UserRepository) InsertUser(ctx context.Context, email, password, role 
 		return nil, err
 	}
 
-	query, args, err := sq.Insert("users").Columns("id", "email", "password", "role").Values(id, email, hashedPassword, role).ToSql()
+	query, args, err := sq.Insert("users").Columns("id", "email", "password", "role").Values(id, email, hashedPassword, role).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
@@ -55,7 +55,7 @@ func (ur *UserRepository) InsertUser(ctx context.Context, email, password, role 
 }
 
 func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	query, args, err := sq.Select("*").From("users").Where(sq.Eq{"email": email}).ToSql()
+	query, args, err := sq.Select("*").From("users").Where(sq.Eq{"email": email}).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}

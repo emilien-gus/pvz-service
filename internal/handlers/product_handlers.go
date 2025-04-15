@@ -21,7 +21,7 @@ func NewProductHandler(productService services.ProductServiceInterface) *Product
 func (h *ProductHandler) Add(c *gin.Context) {
 	var req struct {
 		ProductType string `json:"type" binding:"required"`
-		PVZID       string `json:"pvz_id" binding:"required"`
+		PVZID       string `json:"pvzId" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,13 +46,12 @@ func (h *ProductHandler) Add(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, services.ErrAccessDenied) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
 		} else if errors.Is(err, repository.ErrNoActiveReception) {
 			c.JSON(http.StatusBadRequest, err.Error())
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
 		}
+		return
 	}
 
 	c.JSON(http.StatusCreated, product)

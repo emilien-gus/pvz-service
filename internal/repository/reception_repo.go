@@ -37,6 +37,7 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 			sq.Eq{"pvz_id": pvzID},
 			sq.Eq{"status": models.ReceptionStatusInProgress},
 		}).Limit(1).
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	if err != nil {
@@ -62,6 +63,7 @@ func (r *ReceptionRepository) InsertReception(ctx context.Context, pvzID uuid.UU
 		Columns("id, pvz_id").
 		Values(id, pvzID).
 		Suffix("RETURNING id, date_time, pvz_id, status").
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
 
 	if err != nil {
@@ -95,16 +97,22 @@ func (r *ReceptionRepository) UpdateLastReceptionStatus(ctx context.Context, pvz
 	query, args, err := sq.
 		Update("receptions").
 		Set("status", models.ReceptionStatusClosed).
-		Where(sq.And{
-			sq.Eq{"pvz_id": pvzID},
-			sq.Eq{"status": models.ReceptionStatusInProgress},
-		}).
-		OrderBy("date_time DESC").
-		Limit(1).
+		Where(`
+            id = (
+                SELECT id FROM receptions 
+                WHERE pvz_id = $2 AND status = $3
+                ORDER BY date_time DESC 
+                LIMIT 1
+            )`,
+			pvzID,
+			models.ReceptionStatusInProgress,
+		).
 		Suffix("RETURNING id, date_time, pvz_id, status").
+		PlaceholderFormat(sq.Dollar).
 		ToSql()
+
 	if err != nil {
-		return nil, fmt.Errorf("build update query: %w", err)
+		return nil, fmt.Errorf("failed to build update query: %w", err)
 	}
 
 	var reception models.Reception
@@ -114,6 +122,7 @@ func (r *ReceptionRepository) UpdateLastReceptionStatus(ctx context.Context, pvz
 		&reception.PVZID,
 		&reception.Status,
 	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrNoActiveReception

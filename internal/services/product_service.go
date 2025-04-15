@@ -28,18 +28,17 @@ func NewProductService(productRepo repository.ProductRepositoryInterface) *Produ
 }
 
 func (s *ProductService) AddProduct(ctx context.Context, productType string, pvzID uuid.UUID, role string) (models.Product, error) {
-	product := &models.Product{}
 	if role != "employee" {
-		return *product, ErrAccessDenied
+		return models.Product{}, ErrAccessDenied
 	}
 
 	if _, ok := allowedProductTypes[productType]; !ok {
-		return *product, ErrProductTypeNotAllowed
+		return models.Product{}, ErrProductTypeNotAllowed
 	}
 
 	product, err := s.productRepo.InsertProduct(ctx, productType, pvzID)
 	if err != nil {
-		return *product, err
+		return models.Product{}, err
 	}
 
 	return *product, err

@@ -34,8 +34,8 @@ func SetupRoutes(db *sql.DB, r *gin.Engine) {
 
 	r.POST("/pvz", PVZHandler.CreatePVZ)
 	r.GET("/pvz", PVZHandler.GetPVZInfo)
-	r.PUT("/pvz/:pvzID/close_last_reception", receptionHandler.Close)
-	r.DELETE("/pvz/:pvzID/delete_last_product", productHandler.Delete)
+	r.PUT("/pvz/:pvzId/close_last_reception", receptionHandler.Close)
+	r.DELETE("/pvz/:pvzId/delete_last_product", productHandler.Delete)
 	r.POST("/reception", receptionHandler.Create)
-	r.POST("/product", productHandler.Add)
+	r.POST("/products", productHandler.Add)
 }

@@ -38,11 +38,9 @@ func NewUserService(userRepo repository.UserRepositoryInterface) *UserService {
 }
 
 func (u *UserService) RegisterUser(ctx context.Context, email, password, role string) (models.User, error) {
-	user := &models.User{}
-
 	user, err := u.userRepo.InsertUser(ctx, email, password, role)
 	if err != nil {
-		return *user, err
+		return models.User{}, err
 	}
 
 	return *user, nil
