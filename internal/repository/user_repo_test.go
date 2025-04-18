@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	usersInsertQuery = regexp.QuoteMeta(`INSERT INTO users (id,email,password,role) VALUES (?,?,?,?)`)
-	usersSelectQuery = regexp.QuoteMeta(`SELECT * FROM users WHERE email = ?`)
+	usersInsertQuery = regexp.QuoteMeta(`INSERT INTO users (id,email,password,role) VALUES ($1,$2,$3,$4)`)
+	usersSelectQuery = regexp.QuoteMeta(`SELECT * FROM users WHERE email = $1`)
 )
 
 func TestUserRepository_InsertUser_Success(t *testing.T) {

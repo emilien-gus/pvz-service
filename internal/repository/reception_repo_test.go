@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	receptionSelectInInsertQuery = regexp.QuoteMeta(`SELECT 1 FROM receptions WHERE (pvz_id = ? AND status = ?) LIMIT 1`)
-	receptionInsertQuery         = regexp.QuoteMeta(`INSERT INTO receptions (id, pvz_id) VALUES (?,?) RETURNING id, date_time, pvz_id, status`)
-	receptionUpdateQuery         = regexp.QuoteMeta(`UPDATE receptions SET status = ? WHERE (pvz_id = ? AND status = ?)  ORDER BY date_time DESC LIMIT 1 RETURNING id, date_time, pvz_id, status`)
+	receptionSelectInInsertQuery = regexp.QuoteMeta(`SELECT 1 FROM receptions WHERE (pvz_id = $1 AND status = $2) LIMIT 1`)
+	receptionInsertQuery         = regexp.QuoteMeta(`INSERT INTO receptions (id, pvz_id) VALUES ($1,$2) RETURNING id, date_time, pvz_id, status`)
+	receptionUpdateQuery         = regexp.QuoteMeta(`UPDATE receptions SET status = $1 WHERE id = ( SELECT id FROM receptions WHERE pvz_id = $2 AND status = $3 ORDER BY date_time DESC LIMIT 1 ) RETURNING id, date_time, pvz_id, status`)
 )
 
 func TestReceptionRepository_InsertReception_Success(t *testing.T) {

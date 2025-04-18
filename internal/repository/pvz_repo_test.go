@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	pvzInsertQuery = regexp.QuoteMeta(`INSERT INTO pvz (id, city) VALUES (?,?) RETURNING id, registration_date, city`)
+	pvzInsertQuery = regexp.QuoteMeta(`INSERT INTO pvz (id, city) VALUES ($1,$2) RETURNING id, registration_date, city`)
 )
 
 func TestPVZRepository_InsertPVZ_Success(t *testing.T) {

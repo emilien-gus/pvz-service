@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	productSelectInInsertQuery = regexp.QuoteMeta(`SELECT id FROM reception WHERE (pvz_id = ? AND status = ?) LIMIT 1`)
-	productInsertQuery         = regexp.QuoteMeta(`INSERT INTO products (id, reception_id) VALUES (?,?) RETURNING id, date_time, type, reception_id`)
-	productSelectInDeleteQuery = regexp.QuoteMeta(`SELECT id FROM receptions WHERE (pvz_id = ? AND status = ?) LIMIT 1`)
-	productDeleteQuery         = regexp.QuoteMeta(`DELETE FROM products WHERE id = (SELECT id FROM products WHERE reception_id = ? ORDER BY created_at DESC LIMIT 1)`)
+	productSelectInInsertQuery = regexp.QuoteMeta(`SELECT id FROM receptions WHERE (pvz_id = $1 AND status = $2) LIMIT 1`)
+	productInsertQuery         = regexp.QuoteMeta(`INSERT INTO products (id, type, reception_id) VALUES ($1,$2,$3) RETURNING id, date_time, type, reception_id`)
+	productSelectInDeleteQuery = regexp.QuoteMeta(`SELECT id FROM receptions WHERE (pvz_id = $1 AND status = $2) LIMIT 1`)
+	productDeleteQuery         = regexp.QuoteMeta(`DELETE FROM products WHERE id = (SELECT id FROM products WHERE reception_id = $1 ORDER BY date_time DESC LIMIT 1)`)
 )
 
 func TestProductRepository_InsertProduct_Success(t *testing.T) {
@@ -29,6 +29,7 @@ func TestProductRepository_InsertProduct_Success(t *testing.T) {
 	pvzID := uuid.New()
 	receptionID := uuid.New()
 	productID := uuid.New()
+	productType := "обувь"
 	now := time.Now()
 
 	mock.ExpectBegin()
@@ -38,13 +39,13 @@ func TestProductRepository_InsertProduct_Success(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receptionID))
 
 	mock.ExpectQuery(productInsertQuery).
-		WithArgs(sqlmock.AnyArg(), receptionID).
+		WithArgs(sqlmock.AnyArg(), productType, receptionID).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "date_time", "type", "reception_id"}).
-			AddRow(productID, now, "", receptionID))
+			AddRow(productID, now, productType, receptionID))
 
 	mock.ExpectCommit()
 
-	result, err := repo.InsertProduct(context.Background(), "", pvzID)
+	result, err := repo.InsertProduct(context.Background(), productType, pvzID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, productID, result.ID)
