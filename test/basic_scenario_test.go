@@ -64,7 +64,7 @@ func TestBasicScenario(t *testing.T) {
 
 	openReception(t, server.URL, employeeToken, pvz.ID)
 
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		addProduct(t, server.URL, employeeToken, "обувь", pvz.ID)
 	}
 
