@@ -19,7 +19,7 @@ func NewReceptionHandler(receptionService services.ReceptionServiceInterface) *R
 
 func (h *ReceptionHandler) Create(c *gin.Context) {
 	var req struct {
-		PVZID string `json:"pvz_id" binding:"required"`
+		PVZID string `json:"pvzId" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {

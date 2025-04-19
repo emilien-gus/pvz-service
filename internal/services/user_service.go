@@ -86,11 +86,6 @@ func DummyLogin(role string) (string, error) {
 }
 
 func generateJWT(user *models.User) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return "", fmt.Errorf("JWT_SECRET not set")
-	}
-
 	claims := CustomClaims{
 		UserID: user.ID,
 		Role:   user.Role,

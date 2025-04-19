@@ -1,14 +1,12 @@
 package test
 
 import (
-	"avito-shop/internal/handlers"
-	"avito-shop/internal/middleware"
-	"avito-shop/internal/repository"
-	"avito-shop/internal/services"
 	"database/sql"
-	"net/http"
 	"net/http/httptest"
-	"pvz/internal/data"
+	"pvz/internal/handlers"
+	"pvz/internal/middleware"
+	"pvz/internal/repository"
+	"pvz/internal/services"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -48,32 +46,29 @@ func setupRoutesForBasicTest(db *sql.DB) *gin.Engine {
 
 // test creating pvz, opening reception, adding 50 products.
 func TestBasicScenario(t *testing.T) {
-	err := data.InitDB()
-	assert.NoError(t, err)
+	db := initTestDB()
 	defer func() {
-		data.CloseDB()
+		err := db.Close()
 		assert.NoError(t, err)
 	}()
 
-	router := setupRoutesForBasicTest(data.DB)
+	middleware.SetSecretKey(secret)
+	router := setupRoutesForBasicTest(db)
 	server := httptest.NewServer(router)
 	defer server.Close()
 
 	employeeToken := getToken(server.URL, "employee")
 	moderatorToken := getToken(server.URL, "moderator")
 
-	req, _ := http.NewRequest("POST", server.URL+"/pvz", nil)
-	req.Header.Set("Authorization", "Bearer "+moderatorToken)
+	pvz := createPVZ(t, server.URL, moderatorToken)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	openReception(t, server.URL, employeeToken, pvz.ID)
 
+	for i := 0; i < 50; i++ {
+		addProduct(t, server.URL, employeeToken, "обувь", pvz.ID)
+	}
+
+	closeReception(t, server.URL, employeeToken, pvz.ID)
+	err := deletePVZById(db, pvz.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusCreated, resp.StatusCode)
-
-	// err = deleteUserByID(db, user.ID)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
 }
