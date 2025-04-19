@@ -40,8 +40,8 @@ func TestProductHandler_Add(t *testing.T) {
 
 	pvzID := uuid.New()
 	validBody := map[string]string{
-		"type":   "электроника",
-		"pvz_id": pvzID.String(),
+		"type":  "электроника",
+		"pvzId": pvzID.String(),
 	}
 
 	t.Run("successful product addition", func(t *testing.T) {
@@ -69,8 +69,8 @@ func TestProductHandler_Add(t *testing.T) {
 
 	t.Run("invalid PVZ ID format", func(t *testing.T) {
 		invalidBody := map[string]string{
-			"type":   "electronics",
-			"pvz_id": "invalid-uuid",
+			"type":  "electronics",
+			"pvzId": "invalid-uuid",
 		}
 
 		jsonBody, _ := json.Marshal(invalidBody)

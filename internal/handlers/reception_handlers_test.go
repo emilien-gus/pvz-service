@@ -40,7 +40,7 @@ func TestReceptionHandler_Create(t *testing.T) {
 	router.POST("/receptions", jwtAuthMock(), handler.Create)
 
 	pvzID := uuid.New()
-	validBody := map[string]string{"pvz_id": pvzID.String()}
+	validBody := map[string]string{"pvzId": pvzID.String()}
 
 	t.Run("successful reception create", func(t *testing.T) {
 		expectedReception := models.Reception{
@@ -69,7 +69,7 @@ func TestReceptionHandler_Create(t *testing.T) {
 	})
 
 	t.Run("invalid UUID", func(t *testing.T) {
-		invalidBody := map[string]string{"pvz_id": "invalid-uuid"}
+		invalidBody := map[string]string{"pvzId": "invalid-uuid"}
 		jsonBody, _ := json.Marshal(invalidBody)
 
 		req := httptest.NewRequest("POST", "/receptions", bytes.NewBuffer(jsonBody))
